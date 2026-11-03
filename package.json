@@ -1,6 +1,6 @@
 {
   "name": "panel-peek",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Panel Peek: a transparent, always-on-top manga/manhwa reader that hides as a bubble when you're not hovering it.",
   "main": "main.js",
   "scripts": {
@@ -19,16 +19,19 @@
     "productName": "Panel Peek",
     "win": {
       "target": "portable",
-      "signAndEditExecutable": false
+      "signAndEditExecutable": false,
+      "icon": "assets/icon.ico"
     },
     "files": [
       "main.js",
       "preload.js",
-      "renderer/**"
+      "renderer/**",
+      "assets/**"
     ],
     "portable": {
       "artifactName": "PanelPeek-${version}.exe"
-    }
+    },
+    "afterPack": "build/afterPack.js"
   },
   "productName": "Panel Peek"
 }

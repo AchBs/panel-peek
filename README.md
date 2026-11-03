@@ -1,8 +1,16 @@
-# Panel Peek 👀
+<p align="center">
+  <img src="assets/icon.svg" width="128" alt="Panel Peek logo: an eye peeking out of a comic page">
+</p>
+
+<h1 align="center">Panel Peek 👀</h1>
+
+<div align="center">
 
 [![Latest release](https://img.shields.io/github/v/release/AchBs/panel-peek?label=download)](https://github.com/AchBs/panel-peek/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/AchBs/panel-peek/total)](https://github.com/AchBs/panel-peek/releases)
 ![Platform](https://img.shields.io/badge/platform-Windows-blue)
+
+</div>
 
 ### Oh, you're at work and want to read some manga/manhwa… *secretly*?
 
@@ -55,7 +63,9 @@ In PowerShell: `Get-FileHash .\PanelPeek-1.0.0.exe`
 | Open or hide from the keyboard | **Ctrl+Alt+M** |
 | Move the bubble | Drag it |
 | Move the reader | Drag the top bar |
-| Resize | Drag either bottom corner |
+| Resize | Drag any edge or corner of the reader |
+| Reset to default size | Double-click the top bar |
+| Bubble size | ● slider in the bottom bar |
 | Keep it open | 📌 pin |
 | Add the current site to Home | ☆ in the Web tab |
 
@@ -74,6 +84,8 @@ Everything is stored in `%APPDATA%/Panel Peek/settings.json`:
 | `hideDelay` | ms to wait before hiding (0 = instant) |
 | `expandDelay` | ms of hovering before it opens |
 | `opacity` / `bubbleOpacity` | how see-through the reader and the bubble are |
+| `bubbleSize` | bubble diameter in px (36–120) |
+| `expanded` | the reader's width and height |
 | `adblock` | `false` turns the ad blocker off |
 | `sites` | your Home screen shortcuts |
 

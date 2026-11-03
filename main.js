@@ -29,6 +29,7 @@ const DEFAULTS = {
   lastUrl: 'https://www.google.com',
   lastFolder: null,
   zoom: 1,
+  bubbleSize: 56,                   // px, adjustable from the reader's bottom bar
   hideDelay: 0,                     // ms after mouse leaves before shrinking (0 = instant)
   expandDelay: 350,                 // ms of hovering the bubble before expanding
   adblock: true,
@@ -61,7 +62,8 @@ function saveSettings() {
 }
 
 // ---------- window ----------
-const BUBBLE = 56;
+const MIN_W = 260, MIN_H = 220;
+function bubbleSize() { return clamp(Math.round(Number(settings.bubbleSize) || 56), 36, 120); }
 let win;
 let collapsed = true;      // start as a bubble
 let hidden = false;
@@ -77,6 +79,7 @@ function workAreaFor(point) {
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
 function bubbleBounds() {
+  const BUBBLE = bubbleSize();
   let { x, y } = settings.bubble;
   if (x == null || y == null) {
     const wa = screen.getPrimaryDisplay().workArea;
@@ -93,8 +96,10 @@ function bubbleBounds() {
 // flipping/clamping so it always fits on the screen.
 function expandedBounds() {
   const b = bubbleBounds();
-  const { width, height } = settings.expanded;
+  const BUBBLE = b.width;
   const wa = workAreaFor({ x: b.x, y: b.y });
+  const width = clamp(settings.expanded.width, MIN_W, wa.width);
+  const height = clamp(settings.expanded.height, MIN_H, wa.height);
   let x = b.x + BUBBLE - width;
   if (x < wa.x) x = b.x;                       // not enough room on the left -> open to the right
   let y = b.y;
@@ -137,6 +142,7 @@ function createWindow() {
     skipTaskbar: true,
     resizable: false,     // resizing is done with our own grip (transparent windows can't use the OS frame)
     hasShadow: false,
+    icon: path.join(__dirname, 'assets', process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
     maximizable: false,
     fullscreenable: false,
     webPreferences: {
@@ -206,36 +212,58 @@ ipcMain.on('collapse-now', () => collapse());
 ipcMain.on('set-pinned', (_e, v) => { pinned = !!v; });
 ipcMain.on('quit', () => app.quit());
 
-// custom resize grip (bottom-left or bottom-right)
+// custom resizing from any edge or corner: side is a combination of n/s/e/w
 let resizeStart = null;
 ipcMain.on('resize-start', (_e, side) => {
-  resizeStart = { side, cursor: screen.getCursorScreenPoint(), bounds: win.getBounds() };
+  resizeStart = { side: String(side), cursor: screen.getCursorScreenPoint(), bounds: win.getBounds() };
 });
 ipcMain.on('resize-move', () => {
   if (!resizeStart || collapsed) return;
   const p = screen.getCursorScreenPoint();
   const dx = p.x - resizeStart.cursor.x;
   const dy = p.y - resizeStart.cursor.y;
-  const s = resizeStart.bounds;
-  const height = Math.max(260, s.height + dy);
-  let width, x;
-  if (resizeStart.side === 'left') {
-    width = Math.max(260, s.width - dx);
-    x = s.x + s.width - width;
-  } else {
-    width = Math.max(260, s.width + dx);
-    x = s.x;
-  }
-  setBoundsSafe({ x, y: s.y, width, height });
+  const { side, bounds: s } = resizeStart;
+  const wa = workAreaFor(p);
+  let { x, y, width, height } = s;
+  if (side.includes('e')) width = s.width + dx;
+  if (side.includes('w')) width = s.width - dx;
+  if (side.includes('s')) height = s.height + dy;
+  if (side.includes('n')) height = s.height - dy;
+  width = clamp(width, MIN_W, wa.width);
+  height = clamp(height, MIN_H, wa.height);
+  if (side.includes('w')) x = s.x + s.width - width;   // keep the opposite edge still
+  if (side.includes('n')) y = s.y + s.height - height;
+  setBoundsSafe({ x, y, width, height });
 });
+function anchorBubbleToPanel() {
+  const b = win.getBounds();
+  settings.bubble = { x: b.x + b.width - bubbleSize(), y: b.y };   // bubble sits on the panel's top-right
+}
 ipcMain.on('resize-end', () => {
   if (!resizeStart) return;
   const b = win.getBounds();
   settings.expanded = { width: b.width, height: b.height };
-  // keep the bubble anchored to the panel's top-right corner
-  settings.bubble = { x: b.x + b.width - BUBBLE, y: b.y };
+  anchorBubbleToPanel();
   saveSettings();
   resizeStart = null;
+});
+ipcMain.on('reset-size', () => {
+  if (collapsed) return;
+  settings.expanded = { ...DEFAULTS.expanded };
+  setBoundsSafe(expandedBounds());
+  anchorBubbleToPanel();
+  saveSettings();
+});
+ipcMain.on('set-bubble-size', (_e, size) => {
+  if (!collapsed) {
+    // keep the bubble's right edge where it is
+    const old = bubbleSize();
+    settings.bubbleSize = size;
+    if (settings.bubble.x != null) settings.bubble.x += old - bubbleSize();
+  } else {
+    settings.bubbleSize = size;
+  }
+  saveSettings();
 });
 
 // moving the expanded panel by its title bar
@@ -251,8 +279,7 @@ ipcMain.on('move-move', () => {
 });
 ipcMain.on('move-end', () => {
   if (!moveStart) return;
-  const b = win.getBounds();
-  settings.bubble = { x: b.x + b.width - BUBBLE, y: b.y };
+  anchorBubbleToPanel();
   saveSettings();
   moveStart = null;
 });

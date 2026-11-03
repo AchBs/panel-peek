@@ -24,6 +24,7 @@ api.onInit((s) => {
   settings.sites = Array.isArray(s.sites) ? s.sites : [];
   $('opacity').value = s.opacity;
   $('zoom').value = s.zoom;
+  $('bubbleSize').value = s.bubbleSize || 56;
   applyOpacity();
   setMode('home'); // always open on Home with the "Continue" card
 });
@@ -423,6 +424,8 @@ $('zoom').oninput = (e) => {
   api.save({ zoom: settings.zoom });
 };
 
+$('bubbleSize').oninput = (e) => api.setBubbleSize(Number(e.target.value));
+
 // ---------- moving & resizing (custom, because the window is transparent/frameless) ----------
 function dragHandle(elm, start, move, end) {
   elm.addEventListener('pointerdown', (e) => {
@@ -445,6 +448,8 @@ function dragHandle(elm, start, move, end) {
 }
 
 dragHandle($('titlebar'), api.moveStart, api.moveMove, api.moveEnd);
-document.querySelectorAll('.grip').forEach((g) =>
+document.querySelectorAll('.rz').forEach((g) =>
   dragHandle(g, () => api.resizeStart(g.dataset.side), api.resizeMove, api.resizeEnd)
 );
+// double-click the title bar to go back to the default size
+$('titlebar').addEventListener('dblclick', (e) => { if (!e.target.closest('button')) api.resetSize(); });

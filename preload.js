@@ -10,6 +10,8 @@ contextBridge.exposeInMainWorld('bubble', {
   resizeStart: (side) => ipcRenderer.send('resize-start', side),
   resizeMove: () => ipcRenderer.send('resize-move'),
   resizeEnd: () => ipcRenderer.send('resize-end'),
+  resetSize: () => ipcRenderer.send('reset-size'),
+  setBubbleSize: (n) => ipcRenderer.send('set-bubble-size', n),
   moveStart: () => ipcRenderer.send('move-start'),
   moveMove: () => ipcRenderer.send('move-move'),
   moveEnd: () => ipcRenderer.send('move-end'),

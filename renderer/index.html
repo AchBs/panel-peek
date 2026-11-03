@@ -8,9 +8,7 @@
 <body class="collapsed">
   <!-- the bubble (shown when collapsed) -->
   <div id="bubble" title="Hover to open · drag to move">
-    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-      <path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v16H5.5C4.7 20 4 19.3 4 18.5v-13zM13 4h5.5c.8 0 1.5.7 1.5 1.5v13c0 .8-.7 1.5-1.5 1.5H13V4z" fill="currentColor"/>
-    </svg>
+    <img src="../assets/mark.svg" alt="" draggable="false">
   </div>
 
   <!-- the reader panel (shown when expanded) -->
@@ -65,10 +63,18 @@
     <footer id="statusbar">
       <label title="Opacity">◐ <input id="opacity" type="range" min="0.2" max="1" step="0.05"></label>
       <label title="Zoom">🔍 <input id="zoom" type="range" min="0.5" max="2" step="0.05"></label>
+      <label title="Bubble size">● <input id="bubbleSize" type="range" min="36" max="120" step="2"></label>
     </footer>
 
-    <div class="grip left" data-side="left"></div>
-    <div class="grip right" data-side="right"></div>
+    <!-- resize from any edge or corner -->
+    <div class="rz n" data-side="n"></div>
+    <div class="rz s" data-side="s"></div>
+    <div class="rz e" data-side="e"></div>
+    <div class="rz w" data-side="w"></div>
+    <div class="rz nw" data-side="nw"></div>
+    <div class="rz ne" data-side="ne"></div>
+    <div class="rz sw" data-side="sw"></div>
+    <div class="rz se" data-side="se"></div>
   </div>
 
   <script src="history.js"></script>

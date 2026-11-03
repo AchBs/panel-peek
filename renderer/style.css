@@ -32,8 +32,8 @@ button {
 #bubble {
   position: fixed;
   inset: 0;
-  width: 56px;
-  height: 56px;
+  width: 100vw;      /* the window is exactly the bubble's size */
+  height: 100vh;
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -44,7 +44,8 @@ button {
   -webkit-app-region: drag;      /* drag the bubble anywhere */
   transition: opacity 0.15s, transform 0.15s;
 }
-#bubble:hover { opacity: 1; transform: scale(1.05); }
+#bubble:hover { opacity: 1; }
+#bubble img { width: 72%; height: 72%; pointer-events: none; }
 
 body:not(.collapsed) #bubble { display: none; }
 
@@ -162,33 +163,38 @@ body.collapsed #panel {
   gap: 12px;
   align-items: center;
   height: 24px;
-  padding: 0 22px;
+  padding: 0 18px;
   border-top: 1px solid var(--line);
   color: var(--muted);
 }
 #statusbar label { display: flex; align-items: center; gap: 4px; flex: 1; }
 #statusbar input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); height: 12px; }
 
-/* resize grips in the bottom corners */
-.grip {
-  position: absolute;
-  bottom: 0;
-  width: 16px;
-  height: 16px;
-  z-index: 10;
-}
-.grip.left { left: 0; cursor: nesw-resize; }
-.grip.right { right: 0; cursor: nwse-resize; }
-.grip::after {
+/* resize handles on every edge and corner (invisible, just change the cursor) */
+.rz { position: absolute; z-index: 20; }
+.rz.n, .rz.s { left: 10px; right: 10px; height: 5px; }
+.rz.e, .rz.w { top: 10px; bottom: 10px; width: 5px; }
+.rz.n { top: 0; cursor: ns-resize; }
+.rz.s { bottom: 0; cursor: ns-resize; }
+.rz.e { right: 0; cursor: ew-resize; }
+.rz.w { left: 0; cursor: ew-resize; }
+.rz.nw, .rz.ne, .rz.sw, .rz.se { width: 12px; height: 12px; }
+.rz.nw { top: 0; left: 0; cursor: nwse-resize; }
+.rz.se { bottom: 0; right: 0; cursor: nwse-resize; }
+.rz.ne { top: 0; right: 0; cursor: nesw-resize; }
+.rz.sw { bottom: 0; left: 0; cursor: nesw-resize; }
+/* small visual hint in the bottom-right corner */
+.rz.se::after {
   content: "";
   position: absolute;
-  bottom: 4px;
-  width: 7px;
-  height: 7px;
+  right: 3px;
+  bottom: 3px;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid var(--muted);
   border-bottom: 2px solid var(--muted);
+  opacity: 0.6;
 }
-.grip.left::after { left: 4px; border-left: 2px solid var(--muted); }
-.grip.right::after { right: 4px; border-right: 2px solid var(--muted); }
 
 /* while dragging/resizing, keep the webview from eating pointer events */
 body.dragging webview { pointer-events: none; }

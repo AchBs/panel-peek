@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Panel Peek mark: the half-lidded peeking eye (used in the bubble and for tiny icons) -->
+  <defs>
+    <clipPath id="eyeClip">
+      <path d="M8 32 Q32 18 56 32 Q32 52 8 32 Z"/>
+    </clipPath>
+  </defs>
+  <path d="M8 32 Q32 18 56 32 Q32 52 8 32 Z" fill="#f3f5ff"/>
+  <g clip-path="url(#eyeClip)">
+    <circle cx="38" cy="36" r="10" fill="#11152a"/>
+    <circle cx="38" cy="36" r="10" fill="none" stroke="#7aa2ff" stroke-width="3"/>
+    <circle cx="41" cy="33" r="2.6" fill="#f3f5ff"/>
+  </g>
+  <path d="M5 32 Q32 15 59 32" fill="none" stroke="#7aa2ff" stroke-width="6" stroke-linecap="round"/>
+</svg>

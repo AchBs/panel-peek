@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Panel Peek app icon: a comic page inside the bubble, with an eye peeking from the top panel -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a3566"/>
+      <stop offset="1" stop-color="#11152a"/>
+    </linearGradient>
+    <clipPath id="eyeClip">
+      <path d="M96 99 Q128 84 160 99 Q128 122 96 99 Z"/>
+    </clipPath>
+  </defs>
+
+  <circle cx="128" cy="128" r="118" fill="url(#bg)"/>
+  <circle cx="128" cy="128" r="114" fill="none" stroke="#7aa2ff" stroke-width="8"/>
+
+  <g transform="rotate(-8 128 128)">
+    <!-- page -->
+    <rect x="70" y="54" width="116" height="148" rx="12" fill="#f3f5ff"/>
+    <!-- panels -->
+    <rect x="79" y="63" width="98" height="64" rx="5" fill="#d3dcff"/>
+    <rect x="79" y="135" width="45" height="58" rx="5" fill="#e3e8ff"/>
+    <rect x="132" y="135" width="45" height="58" rx="5" fill="#b4c4ff"/>
+    <!-- motion lines in the bottom-right panel -->
+    <path d="M140 152 h29 M140 164 h22 M140 176 h29" stroke="#7aa2ff" stroke-width="4" stroke-linecap="round"/>
+
+    <!-- the peeking eye -->
+    <path d="M96 99 Q128 84 160 99 Q128 122 96 99 Z" fill="#ffffff"/>
+    <g clip-path="url(#eyeClip)">
+      <circle cx="137" cy="103" r="12" fill="#11152a"/>
+      <circle cx="137" cy="103" r="12" fill="none" stroke="#7aa2ff" stroke-width="3"/>
+      <circle cx="141" cy="99" r="3" fill="#ffffff"/>
+    </g>
+    <path d="M92 99 Q128 82 164 99" fill="none" stroke="#11152a" stroke-width="7" stroke-linecap="round"/>
+    <path d="M100 101 Q128 120 156 101" fill="none" stroke="#11152a" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>
