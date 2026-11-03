@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Panel Peek</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="collapsed">
+  <!-- the bubble (shown when collapsed) -->
+  <div id="bubble" title="Hover to open · drag to move">
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+      <path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v16H5.5C4.7 20 4 19.3 4 18.5v-13zM13 4h5.5c.8 0 1.5.7 1.5 1.5v13c0 .8-.7 1.5-1.5 1.5H13V4z" fill="currentColor"/>
+    </svg>
+  </div>
+
+  <!-- the reader panel (shown when expanded) -->
+  <div id="panel">
+    <header id="titlebar">
+      <div class="tabs">
+        <button id="tabHome" class="tab active">Home</button>
+        <button id="tabWeb" class="tab">Web</button>
+        <button id="tabLocal" class="tab">Folder</button>
+      </div>
+      <div class="spacer"></div>
+      <button id="pinBtn" class="icon" title="Pin (don't auto-shrink)">📌</button>
+      <button id="minBtn" class="icon" title="Shrink now (Esc)">–</button>
+      <button id="closeBtn" class="icon" title="Quit">✕</button>
+    </header>
+
+    <div id="toolbar">
+      <div id="webTools" class="tools hidden">
+        <button id="backBtn" class="icon" title="Back">‹</button>
+        <button id="fwdBtn" class="icon" title="Forward">›</button>
+        <button id="reloadBtn" class="icon" title="Reload">⟳</button>
+        <input id="url" spellcheck="false" placeholder="Paste a manga/manhwa URL…">
+        <button id="addSiteBtn" class="icon" title="Add this site to Home">☆</button>
+      </div>
+      <div id="localTools" class="tools hidden">
+        <button id="openBtn" class="text">Open folder…</button>
+        <button id="prevChap" class="icon" title="Previous chapter">‹</button>
+        <span id="chapName" class="chap">No folder</span>
+        <button id="nextChap" class="icon" title="Next chapter">›</button>
+      </div>
+    </div>
+
+    <main id="content">
+      <div id="home">
+        <section id="continueCard"></section>
+
+        <h3>Recently read</h3>
+        <ul id="recentList"></ul>
+
+        <h3>Sites <button id="editSites" class="link">edit</button></h3>
+        <div id="sites"></div>
+        <form id="addSiteForm" class="hidden">
+          <input id="siteName" placeholder="Name" spellcheck="false">
+          <input id="siteUrl" placeholder="https://…" spellcheck="false">
+          <button class="text" type="submit">Add</button>
+        </form>
+      </div>
+      <webview id="web" class="hidden" partition="persist:manga" src="about:blank"></webview>
+      <div id="local" class="hidden"><div id="pages"></div></div>
+    </main>
+
+    <footer id="statusbar">
+      <label title="Opacity">◐ <input id="opacity" type="range" min="0.2" max="1" step="0.05"></label>
+      <label title="Zoom">🔍 <input id="zoom" type="range" min="0.5" max="2" step="0.05"></label>
+    </footer>
+
+    <div class="grip left" data-side="left"></div>
+    <div class="grip right" data-side="right"></div>
+  </div>
+
+  <script src="history.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
