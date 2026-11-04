@@ -1,5 +1,5 @@
 node_modules/
 dist/
 
-# full-desktop screenshot (cropped copy lives in docs/)
+# original screenshot (a compressed copy lives in docs/)
 /screenshot.png

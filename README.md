@@ -19,7 +19,7 @@ Say hi to **Panel Peek**: a tiny see-through reader that floats over your spread
 > Reading at work is between you and your conscience. Panel Peek only makes it harder to get caught.
 
 <p align="center">
-  <img src="docs/screenshot.jpg" width="760" alt="Panel Peek reading a manhwa chapter, see-through over the Windows desktop">
+  <img src="docs/screenshot.jpg" width="900" alt="Panel Peek reading a manhwa chapter, see-through over the Windows desktop">
   <br>
   <sub>See-through, always on top, and gone the moment your mouse leaves it.</sub>
 </p>
