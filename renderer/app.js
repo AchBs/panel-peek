@@ -6,7 +6,7 @@ const urlInput = $('url');
 const pages = $('pages');
 const local = $('local');
 
-let settings = { history: [], sites: [] };
+let settings = { history: [], sites: [], siteIcons: {} };
 let mode = 'home';
 let chapter = null;          // current local chapter
 let pinned = false;
@@ -22,6 +22,7 @@ api.onInit((s) => {
   settings = { ...settings, ...s };
   settings.history = Array.isArray(s.history) ? s.history : [];
   settings.sites = Array.isArray(s.sites) ? s.sites : [];
+  settings.siteIcons = s.siteIcons && typeof s.siteIcons === 'object' ? s.siteIcons : {};
   $('opacity').value = s.opacity;
   $('zoom').value = s.zoom;
   $('bubbleSize').value = s.bubbleSize || 56;
@@ -58,6 +59,19 @@ $('tabLocal').onclick = () => setMode('local');
 // ---------- window buttons ----------
 $('minBtn').onclick = () => api.collapseNow();
 $('closeBtn').onclick = () => { savePosition(); api.quit(); };
+const SIZES = [
+  { name: 'S', w: 340, h: 500 },
+  { name: 'M', w: 420, h: 640 },
+  { name: 'L', w: 560, h: 820 },
+  { name: 'XL', w: 760, h: 1000 }
+];
+$('sizeBtn').onclick = () => {
+  // go to the next preset bigger than the current width, wrapping back to S
+  const next = SIZES.find((p) => p.w > window.innerWidth + 10) || SIZES[0];
+  api.setSize(next.w, next.h);
+  flash($('sizeBtn'), next.name);
+};
+
 $('pinBtn').onclick = () => {
   pinned = !pinned;
   $('pinBtn').classList.toggle('on', pinned);
@@ -100,7 +114,79 @@ function recordWeb() {
   const existing = settings.history.find((h) => h.key === info.key);
   // only overwrite the series name if we found a better one
   if (existing && existing.series && info.series === info.host) info.series = existing.series;
-  upsert({ kind: 'web', url, title: web.getTitle(), ...info });
+  const entry = upsert({ kind: 'web', url, title: web.getTitle(), ...info });
+  ensureCover(entry);
+}
+
+// ---------- covers & site icons ----------
+let pageMeta = { url: null, promise: Promise.resolve(null) };   // icons/og:image of the page in the webview
+const coverTried = new Set();
+const iconTried = new Set();
+
+function readPageMeta() {
+  const url = stripHash(web.getURL());
+  pageMeta = { url, promise: web.executeJavaScript(PAGE_META_SCRIPT).catch(() => null) };
+  return pageMeta;
+}
+
+function setCover(h, file, from) {
+  if (!file) return false;
+  // the entry may have been replaced (e.g. you moved to the next chapter) while the image downloaded
+  h = settings.history.find((x) => x.key === h.key) || h;
+  h.cover = file; h.coverFrom = from;
+  api.save({ history: settings.history });
+  if (mode === 'home') renderHome();
+  return true;
+}
+
+/** Find a cover for a history entry: series page og:image → this chapter page's og:image. */
+async function ensureCover(h) {
+  if (!h || h.kind !== 'web' || (h.cover && h.coverFrom === 'series') || coverTried.has(h.key)) return;
+  coverTried.add(h.key);
+  const seriesUrl = h.seriesUrl || parseReading(h.url, h.title)?.seriesUrl;
+  if (seriesUrl && setCover(h, await api.pageCover(seriesUrl), 'series')) return;
+  if (h.cover) return;
+  // fallback: the chapter page that's open right now, read from the live DOM
+  if (pageMeta.url === h.url) {
+    const meta = await pageMeta.promise;
+    if (meta?.og && setCover(h, await api.cacheImage(meta.og, h.url), 'chapter')) return;
+  }
+  setCover(h, await api.pageCover(h.url), 'chapter');
+}
+
+async function onPageLoaded() {
+  const { url, promise } = readPageMeta();
+  const meta = await promise;
+  if (!meta) return;
+  const host = hostOf(url);
+
+  // site icon, straight from the page's own <link rel="icon"> tags
+  if (host && !settings.siteIcons[host] && !iconTried.has(host)) {
+    iconTried.add(host);
+    const file = await api.siteIcon({ pageUrl: url, icons: meta.icons });
+    if (file) { settings.siteIcons[host] = file; api.save({ siteIcons: settings.siteIcons }); }
+  }
+
+  // on the page of a series you're reading? that's the best place to grab its cover
+  const key = seriesKeyFor(url);
+  const h = key && settings.history.find((x) => x.key === key);
+  const img = meta.og || meta.domCover;
+  if (h && img && h.coverFrom !== 'series') setCover(h, await api.cacheImage(img, url), 'series');
+}
+
+function siteIconFor(siteUrl) {
+  const host = hostOf(siteUrl);
+  const file = settings.siteIcons[host] || settings.siteIcons[host.replace(/^[^.]+\./, '')];
+  if (!file && host && !iconTried.has(host)) {
+    iconTried.add(host);
+    api.siteIcon({ pageUrl: siteUrl }).then((f) => {
+      if (!f) return;
+      settings.siteIcons[host] = f;
+      api.save({ siteIcons: settings.siteIcons });
+      if (mode === 'home') renderHome();
+    });
+  }
+  return file;
 }
 
 function currentWebEntry() {
@@ -157,6 +243,43 @@ function el(tag, cls, text) {
   return e;
 }
 
+// a stable colour per series, for covers we couldn't find
+function hue(str) {
+  let x = 0;
+  for (const c of str || '') x = (x * 31 + c.charCodeAt(0)) >>> 0;
+  return x % 360;
+}
+function initials(name) {
+  return (name || '?').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('');
+}
+function placeholderCover(h, cls) {
+  const d = el('div', cls + ' placeholder', initials(h.series));
+  d.style.setProperty('--h', hue(h.series));
+  return d;
+}
+function coverEl(h, cls) {
+  if (!h.cover) {
+    if (h.kind === 'web') ensureCover(h);
+    return placeholderCover(h, cls);
+  }
+  const img = el('img', cls);
+  img.alt = '';
+  img.loading = 'lazy';
+  img.src = fileUrl(h.cover);
+  img.onerror = () => img.replaceWith(placeholderCover(h, cls));
+  return img;
+}
+function siteIconEl(s) {
+  const letter = () => el('span', 'site-icon', s.name.trim().charAt(0).toUpperCase());
+  const file = siteIconFor(s.url);
+  if (!file) return letter();
+  const img = el('img', 'site-icon img');
+  img.alt = '';
+  img.src = fileUrl(file);
+  img.onerror = () => img.replaceWith(letter());
+  return img;
+}
+
 function chapterLabel(h) {
   return h.chapter ? 'Chapter ' + h.chapter : 'Last page read';
 }
@@ -172,6 +295,7 @@ function renderHome() {
       el('div', 'cc-sub', 'Pick a site below and open a chapter. The app remembers where you stopped.')
     );
   } else {
+    card.append(coverEl(latest, 'cc-cover'));
     const info = el('div', 'cc-info');
     info.append(
       el('div', 'cc-label', 'Continue reading'),
@@ -191,7 +315,9 @@ function renderHome() {
     const li = el('li');
     const main = el('button', 'row');
     main.title = h.url || h.folder;
-    main.append(el('span', 'row-title', h.series), el('span', 'row-sub', `${chapterLabel(h)} · ${timeAgo(h.updated)}`));
+    const text = el('span', 'row-text');
+    text.append(el('span', 'row-title', h.series), el('span', 'row-sub', `${chapterLabel(h)} · ${timeAgo(h.updated)}`));
+    main.append(coverEl(h, 'row-cover'), text);
     main.onclick = () => continueEntry(h);
     const del = el('button', 'icon small', '✕');
     del.title = 'Remove from history';
@@ -208,7 +334,7 @@ function renderHome() {
   for (const s of settings.sites) {
     const b = el('button', 'site');
     b.title = s.url;
-    b.append(el('span', 'site-icon', s.name.trim().charAt(0).toUpperCase()), el('span', 'site-name', s.name));
+    b.append(siteIconEl(s), el('span', 'site-name', s.name));
     b.onclick = () => {
       if (editingSites) return;
       setMode('web'); urlInput.value = s.url; navigate(s.url);
@@ -304,6 +430,7 @@ web.addEventListener('did-navigate', onNav);
 web.addEventListener('did-navigate-in-page', (e) => e.isMainFrame && onNav(e));
 web.addEventListener('page-title-updated', recordWebSoon);
 web.addEventListener('did-stop-loading', () => {
+  onPageLoaded();
   recordWebSoon();
   if (pendingRestore && stripHash(web.getURL()) === stripHash(pendingRestore.url)) {
     web.executeJavaScript(restoreScrollScript(pendingRestore.y)).catch(() => {});
@@ -350,12 +477,19 @@ function showChapter(c, switchTab = true) {
   const name = parts[parts.length - 1] || c.name;
   const parent = parts.slice(0, -1).join('/');
   const num = (name.match(/(\d+(?:\.\d+)?)(?!.*\d)/) || [])[1];
+  const key = 'local:' + parent.toLowerCase();
+  const prev = settings.history.find((x) => x.key === key);
+  // keep the series cover stable: a cover.jpg always wins, otherwise the first one we found
+  const isCoverFile = c.cover && !c.images.includes(c.cover);
+  const cover = isCoverFile ? c.cover : (prev && prev.cover) || c.cover || null;
   upsert({
     kind: 'local',
-    key: 'local:' + parent.toLowerCase(),
+    key,
     folder: c.folder,
     series: parts[parts.length - 2] || name,
-    chapter: num || name
+    chapter: num || name,
+    cover,
+    coverFrom: 'local'
   });
 }
 

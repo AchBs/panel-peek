@@ -45,7 +45,7 @@ function parseReading(url, title) {
 
   const m = path.match(CHAPTER_IN_PATH);
   if (m) {
-    chapter = m[2].replace('-', '.');
+    chapter = u.searchParams.get('episode_no') || m[2].replace('-', '.');
     // cut the path at the start of the segment that holds "chapter"
     const idx = m.index;
     keyPath = path[idx] === '/' ? path.slice(0, idx) : path.slice(0, path.lastIndexOf('/', idx));
@@ -67,8 +67,39 @@ function parseReading(url, title) {
     : keyPath && keyPath.length > 1 ? keyPath.replace(/\/+$/, '').toLowerCase()
     : series.toLowerCase());
 
-  return { key, series, chapter, host };
+  // the series' own page (usually has the cover as og:image)
+  let seriesUrl = keyPath && keyPath.length > 1 ? u.origin + keyPath : null;
+  if (titleNo && seriesUrl) seriesUrl += '/list?title_no=' + titleNo;   // Webtoon
+
+  return { key, series, chapter, host, seriesUrl };
 }
+
+/** The history key a series page would have (to recognise "you're on the page of a series you read"). */
+function seriesKeyFor(url) {
+  let u;
+  try { u = new URL(url); } catch { return null; }
+  const host = u.hostname.replace(/^www\./, '');
+  const titleNo = u.searchParams.get('title_no');
+  if (titleNo) return host + ':title_no=' + titleNo;
+  return host + ':' + decodeURIComponent(u.pathname).replace(/\/+$/, '').toLowerCase();
+}
+
+function hostOf(url) {
+  try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; }
+}
+
+// Runs inside the web page: icon links, og:image, and a likely cover image from the DOM.
+const PAGE_META_SCRIPT = `(() => {
+  const abs = (u) => { try { return new URL(u, location.href).href; } catch { return null; } };
+  const icons = [...document.querySelectorAll('link[rel]')]
+    .filter((l) => /(^|\\s)(icon|apple-touch-icon(-precomposed)?)(\\s|$)/i.test(l.rel))
+    .map((l) => ({ href: abs(l.getAttribute('href')), rel: l.rel.toLowerCase(), sizes: l.getAttribute('sizes') || '' }));
+  const meta = (n) => document.querySelector('meta[property="' + n + '"],meta[name="' + n + '"]')?.content;
+  const og = abs(meta('og:image') || meta('twitter:image') || '') || null;
+  const portrait = [...document.images].filter((i) => i.naturalWidth >= 120 && i.naturalHeight > i.naturalWidth * 1.15 && i.naturalHeight < i.naturalWidth * 2.2);
+  const hit = portrait.find((i) => /cover|thumb|poster/i.test(i.className + ' ' + i.alt + ' ' + i.currentSrc + ' ' + (i.parentElement?.className || '')));
+  return { icons, og, domCover: hit ? hit.currentSrc : null };
+})()`;
 
 function timeAgo(ts) {
   const s = Math.max(0, (Date.now() - ts) / 1000);

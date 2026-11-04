@@ -261,10 +261,9 @@ body.dragging webview { pointer-events: none; }
   flex: 1;
   min-width: 0;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 7px 8px;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 6px;
   border-radius: 6px;
   text-align: left;
 }
@@ -336,3 +335,39 @@ body.dragging webview { pointer-events: none; }
 }
 #addSiteForm input:focus { border-color: var(--accent); }
 #addSiteForm input:first-child { flex: 0.6; }
+
+/* ---------- covers ---------- */
+.cc-cover, .row-cover {
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+.cc-cover { width: 60px; height: 84px; }
+.row-cover { width: 34px; height: 48px; border-radius: 4px; }
+.row-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+/* when no cover could be found: initials on a colour picked from the series name */
+.placeholder {
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: hsl(var(--h) 70% 85%);
+  background: linear-gradient(160deg, hsl(var(--h) 45% 32%), hsl(var(--h) 45% 16%));
+}
+.cc-cover.placeholder { font-size: 20px; }
+.row-cover.placeholder { font-size: 12px; }
+
+/* real site icons */
+.site-icon.img {
+  object-fit: contain;
+  padding: 2px;
+  background: rgba(255, 255, 255, 0.92);
+}

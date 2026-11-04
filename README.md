@@ -24,8 +24,9 @@ Say hi to **Panel Peek**: a tiny see-through reader that floats over your spread
 - **Boss key.** **Ctrl+Alt+H** hides everything, bubble included. Press it again to bring it back.
 - **See-through.** Set the opacity so it blends into whatever is behind it.
 - **Remembers your place.** It opens with a **Continue ▸** card that takes you back to the exact chapter and scroll position where you stopped.
-- **Reading history, sorted by series.** Each series keeps your latest chapter, and you can jump back into any of them in one click.
-- **Your favourite sites, one click away.** Shortcuts for MangaDex, Webtoon, MANGA Plus, Tapas and more. Add any site you like.
+- **Reading history with covers.** Each series shows its cover and your latest chapter, and you can jump back into any of them in one click.
+- **Your favourite sites, one click away.** Shortcuts with their real icons for Asura Scans, Comix, MangaDex, Webtoon, MANGA Plus, Tapas and more. Add any site you like.
+- **Any size you want.** Drag any edge or corner, or use the ⤢ button to switch between S, M, L and XL.
 - **Blocks ads and popups.** A built-in ad blocker, and popups never open.
 - **Reads local folders too.** Point it at a folder of chapter images and it shows them as one long vertical strip, the way manhwa is meant to be read, with next/previous chapter buttons.
 - **Always on top, no taskbar button.** Nothing shows up in your taskbar.
@@ -63,7 +64,7 @@ In PowerShell: `Get-FileHash .\PanelPeek-1.0.0.exe`
 | Open or hide from the keyboard | **Ctrl+Alt+M** |
 | Move the bubble | Drag it |
 | Move the reader | Drag the top bar |
-| Resize | Drag any edge or corner of the reader |
+| Resize | Drag any edge or corner of the reader, or click **⤢** for S / M / L / XL |
 | Reset to default size | Double-click the top bar |
 | Bubble size | ● slider in the bottom bar |
 | Keep it open | 📌 pin |
@@ -74,6 +75,8 @@ In PowerShell: `Get-FileHash .\PanelPeek-1.0.0.exe`
 Any page whose URL or title looks like a chapter (`/chapter/12`, `chapter-12`, `episode-12`, `ch-3.5`, …) is saved automatically and grouped under its series. Your scroll position is saved every 2 seconds and every time the reader hides. When you click **Continue**, it reopens that page and scrolls back to the same spot as the images load.
 
 Local folders work the same way: the parent folder is the series and each subfolder is a chapter.
+
+**Covers and site icons** are taken from each site's own page (the series page's preview image and the site's icon links), then cached in `%APPDATA%/Panel Peek/cache` so Home loads instantly. They're downloaded through the reader's own browser session, never a third-party service. If a site blocks the request, the cover shows up the next time you open that series in the reader. For local folders, a `cover.jpg` (or `folder.png`, `poster.webp`, …) in the series folder is used, otherwise the first page.
 
 ## Settings
 

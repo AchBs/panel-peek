@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, screen, dialog, globalShortcut, session } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const images = require('./images');
 
 app.setName('Panel Peek');
 
@@ -33,10 +34,11 @@ const DEFAULTS = {
   hideDelay: 0,                     // ms after mouse leaves before shrinking (0 = instant)
   expandDelay: 350,                 // ms of hovering the bubble before expanding
   adblock: true,
-  history: [],                      // reading history, newest first (managed by the renderer)
+  history: [],
+  siteIcons: {},                    // host -> cached icon file                      // reading history, newest first (managed by the renderer)
   // Site shortcuts on the Home screen. Editable in the app; these sites change domains often.
   sites: [
-    { name: 'Asura Scans', url: 'https://asuracomic.net' },
+    { name: 'Asura Scans', url: 'https://asurascans.com' },
     { name: 'Comix', url: 'https://comix.to' },
     { name: 'MangaDex', url: 'https://mangadex.org' },
     { name: 'Webtoon', url: 'https://www.webtoons.com/en/' },
@@ -247,12 +249,16 @@ ipcMain.on('resize-end', () => {
   saveSettings();
   resizeStart = null;
 });
-ipcMain.on('reset-size', () => {
+function setSize(width, height) {
   if (collapsed) return;
-  settings.expanded = { ...DEFAULTS.expanded };
-  setBoundsSafe(expandedBounds());
+  settings.expanded = { width: Math.round(width), height: Math.round(height) };
+  setBoundsSafe(expandedBounds());   // keeps the top-right corner where it is, clamps to the screen
   anchorBubbleToPanel();
   saveSettings();
+}
+ipcMain.on('reset-size', () => setSize(DEFAULTS.expanded.width, DEFAULTS.expanded.height));
+ipcMain.on('set-size', (_e, w, h) => {
+  if (Number.isFinite(w) && Number.isFinite(h)) setSize(Math.max(MIN_W, w), Math.max(MIN_H, h));
 });
 ipcMain.on('set-bubble-size', (_e, size) => {
   if (!collapsed) {
@@ -313,18 +319,36 @@ ipcMain.handle('open-folder', async () => {
 ipcMain.handle('load-folder', (_e, folder) => {
   try { return loadFolder(folder); } catch { return null; }
 });
+// cover.jpg / folder.png / poster.webp… in the series folder, else the chapter's first page
+function findLocalCover(folder, pages) {
+  const parent = path.dirname(folder);
+  try {
+    const hit = fs.readdirSync(parent).find((f) =>
+      /^(cover|folder|poster|thumb(nail)?)\.(jpe?g|png|webp|avif|gif)$/i.test(f));
+    if (hit) return path.join(parent, hit);
+  } catch {}
+  return pages[0] || null;
+}
+
 function loadFolder(folder) {
   settings.lastFolder = folder; saveSettings();
   const chapters = listChapters(folder);
   const i = chapters.indexOf(folder);
+  const imgs = listImages(folder);
   return {
+    cover: findLocalCover(folder, imgs),
     folder,
     name: path.basename(folder),
-    images: listImages(folder),
+    images: imgs,
     prev: i > 0 ? chapters[i - 1] : null,
     next: i >= 0 && i < chapters.length - 1 ? chapters[i + 1] : null
   };
 }
+
+// ---------- icons & covers ----------
+ipcMain.handle('site-icon', (_e, req) => images.siteIcon(req || {}));
+ipcMain.handle('cache-image', (_e, url, referer) => images.cacheImage(url, referer));
+ipcMain.handle('page-cover', (_e, url) => images.pageCover(url));
 
 // ---------- app ----------
 // Popups on scan sites are almost always ads: never open new windows from the reader.
@@ -352,6 +376,13 @@ function setupSession() {
 
 app.whenReady().then(() => {
   setupSession();
+  images.init(path.join(app.getPath('userData'), 'cache'));
+  try {
+    images.cleanup([
+      ...(settings.history || []).filter((h) => h.kind !== 'local').map((h) => h.cover),
+      ...Object.values(settings.siteIcons || {})
+    ]);
+  } catch {}
   createWindow();
 
   // Boss key: instantly hide / show everything
