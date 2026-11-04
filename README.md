@@ -18,6 +18,12 @@ Say hi to **Panel Peek**: a tiny see-through reader that floats over your spread
 
 > Reading at work is between you and your conscience. Panel Peek only makes it harder to get caught.
 
+<p align="center">
+  <img src="docs/screenshot.jpg" width="760" alt="Panel Peek reading a manhwa chapter, see-through over the Windows desktop">
+  <br>
+  <sub>See-through, always on top, and gone the moment your mouse leaves it.</sub>
+</p>
+
 ## Why you'll like it
 
 - **Vanishes instantly.** Move the mouse off it and it's gone, with no fade or delay.
@@ -33,7 +39,7 @@ Say hi to **Panel Peek**: a tiny see-through reader that floats over your spread
 
 ## Download
 
-**[⬇ Download PanelPeek-1.0.0.exe](https://github.com/AchBs/panel-peek/releases/download/v1.0.0/PanelPeek-1.0.0.exe)** (Windows 10/11, 64-bit, about 71 MB)
+**[⬇ Download PanelPeek-1.1.0.exe](https://github.com/AchBs/panel-peek/releases/download/v1.1.0/PanelPeek-1.1.0.exe)** (Windows 10/11, 64-bit, about 71 MB)
 
 1. Download the exe and double-click it. It's portable, so there's nothing to install.
 2. It shows up as a small bubble on the right side of your screen. Hover it to start reading.
@@ -48,10 +54,10 @@ All versions are on the [Releases](https://github.com/AchBs/panel-peek/releases)
 <summary>Verify your download (SHA-256)</summary>
 
 ```
-6f57a5ea87c2be25858891697604863c126c02a399a3437a7c3db1de4af4c652  PanelPeek-1.0.0.exe
+1d31f8ac08c0296e479356ac640485c9cc69b0296be41b42a12ae220d503cc10  PanelPeek-1.1.0.exe
 ```
 
-In PowerShell: `Get-FileHash .\PanelPeek-1.0.0.exe`
+In PowerShell: `Get-FileHash .\PanelPeek-1.1.0.exe`
 </details>
 
 ## Controls
